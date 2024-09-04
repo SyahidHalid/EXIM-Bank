@@ -332,4 +332,3 @@ InvProp1 = InvProp.fillna(0).groupby(['Class'])[['YTD '+str(Income_curr[21:])]].
 
 
 #print(sum(InvShare1['YTD '+str(Income_curr[21:])]))
-
