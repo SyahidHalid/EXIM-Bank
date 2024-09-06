@@ -9,8 +9,7 @@ df = st.file_uploader(label= "Upload your dataset:")
 
 if df:
   df = pd.read_csv(df)
-
-st.write(df.head(5))
+  st.write(df.head())
   
 
 
