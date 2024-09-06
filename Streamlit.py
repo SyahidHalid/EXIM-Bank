@@ -1,9 +1,9 @@
 import streamlit as st
 import pandas as pd
 
-st.write('Hello World!')
-
 st.set_page_config(page_title = 'File Uploader')
+
+st.write('Hello World!')
 
 df = st.file_uploader(label= "Upload your dataset:")
 
