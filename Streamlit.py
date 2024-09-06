@@ -3,7 +3,7 @@ import pandas as pd
 
 st.write('Hello World!')
 
-st.set_page_confiq(page_title = 'File Uploader')
+st.set_page_config(page_title = 'File Uploader')
 
 df = st.file_uploader(label= "Upload your dataset:")
 
