@@ -10,12 +10,25 @@ pd.set_option("display.precision", 2) #2 titik perpuluhan
 
 st.set_page_config(page_title = 'File Uploader')
 
+st.write('## Title')
 st.write('Testing for income statement')
+X = st.text_input("Fovarite Movie?")
+is_clicked = st.button("Click Me")
+
+data =pd.read_excel("Income Statement - Dictionary.xlsx", sheet_name='Keyin', header=0)
+st.write(data)
+
+chart_data = pd.DataFrame(np.random.randn(20,3),columns=["a","b","c"])
+
+st.bar_chart(chart_data)
+st.line_chart(chart_data)
 
 df1 = st.file_uploader(label= "Upload your dataset 1:")
 if df1:
   df1 = pd.read_excel(df1, header=5)
+  st.write(f"Your favorite movie is:{X}")
   st.write(df1.head())
+
   
 df2 = st.file_uploader(label= "Upload your dataset 2:")
 if df2:
@@ -37,3 +50,9 @@ if df3:
                             "Unnamed:_10":"Unnamed:_10"}, inplace=True)
   st.write(df3.head())
   #st.write()
+
+
+st.link_button("Youtube",url="https://www.youtube.com/watch?v=D0D4Pa22iG0")
+
+#https://github.com/pixegami/streamlit-demo-app
+
