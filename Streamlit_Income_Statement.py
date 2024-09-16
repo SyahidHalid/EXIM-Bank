@@ -1,3 +1,5 @@
+#cari add filter kt graph 
+#cari cari extract excel
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -13,10 +15,8 @@ st.set_page_config(page_title = 'File Uploader')
 st.write('## Title')
 st.write('Testing for income statement')
 X = st.text_input("Fovarite Movie?")
-is_clicked = st.button("Click Me")
 
-data =pd.read_excel("Income Statement - Dictionary.xlsx", sheet_name='Keyin', header=0)
-st.write(data)
+is_clicked = st.button("Click Me")
 
 chart_data = pd.DataFrame(np.random.randn(20,3),columns=["a","b","c"])
 
@@ -56,3 +56,5 @@ st.link_button("Youtube",url="https://www.youtube.com/watch?v=D0D4Pa22iG0")
 
 #https://github.com/pixegami/streamlit-demo-app
 
+ #data = pd.read_excel("Income Statement - Dictionary.xlsx", sheet_name='Keyin', header=0)
+ #st.write(data)
