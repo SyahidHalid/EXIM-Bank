@@ -6,6 +6,9 @@ import numpy as np
 import datetime as dt 
 import base64
 
+import plotly express as px
+from PIL import Image
+
 #warnings.filterwarnings('ignore')
 pd.set_option("display.max_columns", None) 
 pd.set_option("display.max_colwidth", 1000) #huruf dlm column
@@ -34,7 +37,8 @@ html_template = """
 </div>
 """
 st.markdown(html_template, unsafe_allow_html=True)
-
+#st.header('asd')
+st.subheader("Start:")
 #----------------------------Title--------------------------------------------------------------------
 
 #st.write('# Income Statement')
@@ -79,8 +83,13 @@ if submitted:
 #----------------------------Upload--------------------------------------------------------------------
 
 df1 = st.file_uploader(label= "Upload EXIB:")
+df1 = pd.read_excel(df1, header=5) # sheet_name="Sheet1" usecols='B:D'
+
 df2 = st.file_uploader(label= "Upload EXIM:")
+df2 = pd.read_excel(df2, header=5)
+
 df3 = st.file_uploader(label= "Upload EXTF:")
+df3 = pd.read_excel(df3, header=5)
 
 #if df1:
 #  df1 = pd.read_excel(df1, header=5)
@@ -98,13 +107,10 @@ df3 = st.file_uploader(label= "Upload EXTF:")
 #max_date = datetime.date(2023,4,30)
 
 if df1 and df2 and df3:
-  df1 = pd.read_excel(df1, header=5)
   df1.columns = df1.columns.str.replace("\n", "_").str.replace(" ", "_")
 
-  df2 = pd.read_excel(df2, header=5)
   df2.columns = df2.columns.str.replace("\n", "_").str.replace(" ", "_")
   
-  df3 = pd.read_excel(df3, header=5)
   df3.columns = df3.columns.str.replace("\n", "_").str.replace(" ", "_")
 
   st.write(f"All file submitted for : "+str(year)+"-"+str(month))

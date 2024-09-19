@@ -1,5 +1,5 @@
 pandas==1.5.3 
-plotly==5.9.0
+plotly==5.24.1
 numpy==1.23.5
 matplotlib==3.7.0
 streamlit_authenticator
@@ -9,3 +9,5 @@ streamlit-aggrid
 DateTime
 openpyxl
 xlrd=1.2.0
+streamlit==1.38.0
+Pillow==10.4.0
