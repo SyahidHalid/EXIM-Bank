@@ -76,3 +76,77 @@ if submitted:
   #st.write(year, month)
 
 
+#----------------------------Upload--------------------------------------------------------------------
+
+df1 = st.file_uploader(label= "Upload EXIB:")
+
+if df1:
+  df1 = pd.read_excel(df1, header=5)
+  st.write(df1.head(1))
+
+df2 = st.file_uploader(label= "Upload EXIM:")
+
+if df2:
+  df2 = pd.read_excel(df2, header=5)
+  st.write(df2.head(1))
+
+df3 = st.file_uploader(label= "Upload EXTF:")
+
+if df3:
+  df3 = pd.read_excel(df3, header=5)
+  st.write(df3.head(1))
+
+ #if df1 and df2 and df3:
+  df1.columns = df1.columns.str.replace("\n", "_").str.replace(" ", "_")
+
+  df2.columns = df2.columns.str.replace("\n", "_").str.replace(" ", "_")
+  
+  df3.columns = df3.columns.str.replace("\n", "_").str.replace(" ", "_")
+
+  st.write(f"All file submitted for : "+str(year)+"-"+str(month))
+  #st.write(f"All file submitted for :{str(year)+str(month)}")
+  
+  df1 = df1.rename(columns={"C":"Unnamed:_1",
+                            "Comp":"Item",
+                            "Bus.":"Account",
+                            "Texts":"GL_no.",
+                            "Unnamed:_5":"Mapped_to",
+                            "Unnamed:_6":"Unnamed:_6",
+                            "Unnamed:_7":"Unnamed:_7",
+                            "Unnamed:_8":"GL_Category",
+                            "Reporting_period":"RM",
+                            "Unnamed:_10":"Unnamed:_10"})
+  
+  df2 = df2.rename(columns={"C":"Unnamed:_1",
+                            "Comp":"Item",
+                            "Bus.":"Account",
+                            "Texts":"GL_no.",
+                            "Unnamed:_5":"Mapped_to",
+                            "Unnamed:_6":"Unnamed:_6",
+                            "Unnamed:_7":"Unnamed:_7",
+                            "Unnamed:_8":"GL_Category",
+                            "Reporting_period":"RM",
+                            "Unnamed:_10":"Unnamed:_10"})
+  
+  df3 = df3.rename(columns={"C":"Unnamed:_1",
+                            "Comp":"Item",
+                            "Bus.":"Account",
+                            "Texts":"GL_no.",
+                            "Unnamed:_5":"Mapped_to",
+                            "Unnamed:_6":"Unnamed:_6",
+                            "Unnamed:_7":"Unnamed:_7",
+                            "Unnamed:_8":"GL_Category",
+                            "Reporting_period":"RM",
+                            "Unnamed:_10":"Unnamed:_10"})
+  
+  Income_curr_raw = pd.concat([df1, df2, df3])
+
+  st.write("Income Statement - Raw: ")
+  st.write(Income_curr_raw)
+
+  st.write(Income_curr_raw['Item'].value_counts())
+
+  st.download_button("Download CSV",
+                   Income_curr_raw.to_csv(),
+                   file_name='Income Statement '+str(year)+"-"+str(month)+'.csv',
+                   mime='text/csv')
