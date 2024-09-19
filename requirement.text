@@ -8,3 +8,4 @@ mysql-connector-python
 streamlit-aggrid
 DateTime
 Openpyxl
+Xlrd
