@@ -5,7 +5,7 @@ import pandas as pd
 import numpy as np
 import datetime as dt 
 import base64
-import plotly.express as px
+#import plotly.express as px
 from PIL import Image
 
 #warnings.filterwarnings('ignore')
