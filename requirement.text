@@ -7,3 +7,5 @@ pathlib
 mysql-connector-python
 streamlit-aggrid
 DateTime
+openpyxl
+xlrd=1.2.0

@@ -87,11 +87,15 @@ df3 = st.file_uploader(label= "Upload EXTF:")
 #  st.write(f"Your favorite movie is:{year}")
 #  st.write(df1.head())
   
-
 #if df2:
 #  df2 = pd.read_excel(df2, header=5)
 #  st.write(df2.head())
 
+# Create a sidebar section for user input
+#st.sidebar.title('Dashboard Filters')
+# Add a date input component (Default if user does not input any date)
+#min_date = datetime.date(2022,12,13)
+#max_date = datetime.date(2023,4,30)
 
 if df1 and df2 and df3:
   df1 = pd.read_excel(df1, header=5)
