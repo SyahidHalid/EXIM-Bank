@@ -2,8 +2,8 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import datetime as dt 
-import base64
-from PIL import Image
+#import base64
+#from PIL import Image
 #import plotly.express as px
 
 #warnings.filterwarnings('ignore')
