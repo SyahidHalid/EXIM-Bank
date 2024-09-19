@@ -1,21 +1,18 @@
-#cari add filter kt graph 
-#cari cari extract excel
 import streamlit as st
 import pandas as pd
 import numpy as np
 import datetime as dt 
 import base64
-#import plotly.express as px
 from PIL import Image
+#import plotly.express as px
 
 #warnings.filterwarnings('ignore')
-pd.set_option("display.max_columns", None) 
-pd.set_option("display.max_colwidth", 1000) #huruf dlm column
-pd.set_option("display.max_rows", 100)
-pd.set_option("display.precision", 2) #2 titik perpuluhan
+#pd.set_option("display.max_columns", None) 
+#pd.set_option("display.max_colwidth", 1000) #huruf dlm column
+#pd.set_option("display.max_rows", 100)
+#pd.set_option("display.precision", 2) #2 titik perpuluhan
 
-#----------------------nama kat web atas yg newtab
-#png sahajer
+#----------------------nama kat web atas yg newtab (png sahajer)--------------------
 st.set_page_config(
   page_title = 'Syahid - Automation',
   page_icon = "EXIM.png",
@@ -23,6 +20,7 @@ st.set_page_config(
   )
 
 #to show code kat website
+
 #with st.echo():
 #  def sum(a, b):
 #    return a + b
@@ -82,36 +80,35 @@ if submitted:
 #----------------------------Upload--------------------------------------------------------------------
 
 df1 = st.file_uploader(label= "Upload EXIB:")
-#df1 = pd.read_excel(df1, header=5) # sheet_name="Sheet1" usecols='B:D'
-#st.datafreame(df1)
 
 if df1:
   df1 = pd.read_excel(df1, header=5)
-#  st.write(f"Your favorite movie is:{year}")
-  st.write(df1.head())
+  st.write(df1.head(1))
+
+#st.write(f"Your favorite movie is:{year}")
+#df1 = pd.read_excel(df1, header=5) # sheet_name="Sheet1" usecols='B:D'
+#st.datafreame(df1)
 
 df2 = st.file_uploader(label= "Upload EXIM:")
-#df2 = pd.read_excel(df2, header=5)
 
 if df2:
   df2 = pd.read_excel(df2, header=5)
-  st.write(df2.head())
+  st.write(df2.head(1))
 
 df3 = st.file_uploader(label= "Upload EXTF:")
-#df3 = pd.read_excel(df3, header=5)
-#st.write(df3.head())
 
 if df3:
   df3 = pd.read_excel(df3, header=5)
-  st.write(df3.head())
+  st.write(df3.head(1))
 
-# Create a sidebar section for user input
-#st.sidebar.title('Dashboard Filters')
-# Add a date input component (Default if user does not input any date)
-#min_date = datetime.date(2022,12,13)
-#max_date = datetime.date(2023,4,30)
+  # Create a sidebar section for user input
+  #st.sidebar.title('Dashboard Filters')
+  
+  # Add a date input component (Default if user does not input any date)
+  #min_date = datetime.date(2022,12,13)
+  #max_date = datetime.date(2023,4,30)
 
-#if df1 and df2 and df3:
+  #if df1 and df2 and df3:
   df1.columns = df1.columns.str.replace("\n", "_").str.replace(" ", "_")
 
   df2.columns = df2.columns.str.replace("\n", "_").str.replace(" ", "_")
@@ -507,6 +504,10 @@ if df3:
  
   st.write(newdf4)
 
+  st.download_button("Download CSV",
+                   newdf4.to_csv(),
+                   file_name='Income Statement '+str(year)+"-"+str(month)+'.csv',
+                   mime='text/csv')
   #---------------------------------------------Power BI-------------------------------------------------------------
 
   OpRev1_BI = OpRev.rename(columns={'Business_Unit':'GL_Description_2'})[['GL_Description','GL_Code_','GL_Category','GL_Description_2','Class','Item','YTD '+str(year)+"-"+str(month),'Business_Category']]
@@ -593,14 +594,11 @@ if df3:
 
 #----------------------------Run--------------------------------------------------------------------
 
-is_clicked = st.button("Run")
-
-
-
+#is_clicked = st.button("Run")
 
 #----------------------------Testing Graph--------------------------------------------------------------
 
-chart_data = pd.DataFrame(np.random.randn(20,3),columns=["a","b","c"])
+#chart_data = pd.DataFrame(np.random.randn(20,3),columns=["a","b","c"])
 
 #pie_chart = px.pie(chart_data,
 #                   title="Total",
@@ -608,16 +606,12 @@ chart_data = pd.DataFrame(np.random.randn(20,3),columns=["a","b","c"])
 #                   names="Department")
 #st.plotly_chart(pie_chart)
 
-st.bar_chart(chart_data)
-st.line_chart(chart_data)
+#st.bar_chart(chart_data)
+#st.line_chart(chart_data)
 
 #st.write('Dataset')
-st.dataframe(chart_data.head(5))
-        #csv_Tasks_at_CPDF = convert_df(Tasks_at_CPDF)
-st.download_button("Download CSV",
-                   chart_data.to_csv(),
-                   file_name='Test.csv',
-                   mime='text/csv')
+#st.dataframe(chart_data.head(5))
+#csv_Tasks_at_CPDF = convert_df(Tasks_at_CPDF)
 
 #----------------------------Export--------------------------------------------------------------------
 
