@@ -747,7 +747,7 @@ if submitted:
 
   st.write("Income Statement - Details: ")
   #st.write(newdf4)
-  st.write(PnL_BI.head(3))
+  st.write(PnL_BI)
 
   st.download_button("Download CSV",
                    PnL_BI.to_csv(index=False),
