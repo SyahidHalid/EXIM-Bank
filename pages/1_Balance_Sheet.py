@@ -1,11 +1,17 @@
+import streamlit as st
 import pandas as pd
 import numpy as np
+#import base64
+#from PIL import Image
+#import plotly.express as px
 
 #warnings.filterwarnings('ignore')
-pd.set_option("display.max_columns", None) 
-pd.set_option("display.max_colwidth", 1000) #huruf dlm column
-pd.set_option("display.max_rows", 100)
-pd.set_option("display.precision", 2) #2 titik perpuluhan
+#pd.set_option("display.max_columns", None) 
+#pd.set_option("display.max_colwidth", 1000) #huruf dlm column
+#pd.set_option("display.max_rows", 100)
+#pd.set_option("display.precision", 2) #2 titik perpuluhan
+
+#----------------------nama kat web atas yg newtab (png sahajer)--------------------
 
 EXIB_name = "EXIB_July2024"
  
@@ -275,7 +281,6 @@ InvSub1 = InvSub.fillna(0).groupby(['Class'])[['YTD '+str(Income_curr[21:])]].su
 
 #print(sum(InvSub1['YTD '+str(Income_curr[21:])]))
 
-
 #-----------------------------------------Investment Share------------------------------------------------------------
 
 dic_InvShare1 = dic_InvShare.iloc[np.where(~dic_InvShare['GL_Code_'].isna())].fillna(0)
@@ -331,4 +336,17 @@ InvProp1 = InvProp.fillna(0).groupby(['Class'])[['YTD '+str(Income_curr[21:])]].
 #-----------------------------------------Intangable Asset------------------------------------------------------------
 
 
+#Total_Accumulated_Depreciation
+
+
+AppendR = pd.concat([Cash1,Depo1,InvSec1,ECR1,LAF1,InsRecei1,Deriv1,Other1,InvSub1,InvShare1,InvProp1])
+
+appendR.set_index('Class', inplace=True)
+
+b = appendR.T
+b['Intangible assets'] = b['Interest Income'] + 6498753.33
+
+
+  #c = b.T
+  #newdf =c.reset_index()
 #print(sum(InvShare1['YTD '+str(Income_curr[21:])]))
