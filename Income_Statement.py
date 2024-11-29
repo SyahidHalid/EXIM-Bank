@@ -992,7 +992,9 @@ if df6:
 
   #gender_filter = st.multiselect('Nature of Business in Operating Cost', options=PnL_BI_comb.iloc[np.where(PnL_BI_comb.Class=="Operating Revenue")]['GL_Description_2'].unique(), default=PnL_BI_comb.iloc[np.where(PnL_BI_comb.Class=="Operating Revenue")]['GL_Description_2'].unique())
 
-  data_bar = PnL_BI_comb.set_index("Income Statement")
+  #st.write(PnL_BI_comb)
+  data_bar = PnL_BI_comb.groupby(["Class"])[['YTD '+str(year)+"-"+str(month),'YTD '+str(year)+"-"+str(int(month-1))]].sum()
+
   st.bar_chart(data_bar[["YTD "+str(year)+"-"+str(month),'YTD '+str(year)+"-"+str(int(month-1))]],
                 x_label="Class",
                 y_label="RM",
