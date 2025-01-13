@@ -33,10 +33,10 @@ if df:
   banking23.columns = banking23.columns.str.replace("\n", " ").str.replace(" ", " ")
   
   banking23["Page"] = "2023"
-  banking23.loc[banking23["Date Approved"].isin(["-","0"]),"Date Approved"] = ""
-  banking23["Date Approved"] = banking23["Date Approved"].astype(str)
-  banking23["Date Approved"] = banking23["Date Approved"].str.strip()
-  banking23["Date Approved"] = banking23["Date Approved"].str[:10]
+  #banking23.loc[banking23["Date Approved"].isin(["-","0"]),"Date Approved"] = ""
+  #banking23["Date Approved"] = banking23["Date Approved"].astype(str)
+  #banking23["Date Approved"] = banking23["Date Approved"].str.strip()
+  #banking23["Date Approved"] = banking23["Date Approved"].str[:10]
   banking23["Date Approved"] = pd.to_datetime(banking23["Date Approved"], errors='coerce')
 
   f_b23 = banking23[["CCRIS Application Date",
@@ -53,9 +53,15 @@ if df:
                      "Currency3",
                      "Application Amount (FX Currency )",
                      "Application Amount (RM)",
+                     "Amount Approved  (FX Currency )",
+                     "Amount Approved (RM equivalent)",
+                     "Amount Accepted   ( FX Currency )",
+                     "Amount Accepted  (RM Equivalent)",
+                     "Amount  Rejected  (FX Currency)",
+                     "Amount Rejected  (RM Currency )",
                      "Page"]].sort_values("Date Approved",ascending=False)
 
-  f_b23.loc[~(f_b23["Facility Type / Product Type2"].isin(["Forward Foreign Exchange-i","Bank Guarantee-i","Bank Guarantee","Forward Foreign Exchange"])),"LN"]=f_b23["Application Amount (FX Currency )"]
+  f_b23.loc[~(f_b23["Facility Type / Product Type2"].isin(["Forward Foreign Exchange-i","Bank Guarantee-i","Bank Guarantee","Forward Foreign Exchange"])),"LN"]=f_b23["Application Amount (RM)"]
   f_b23.loc[(f_b23["Facility Type / Product Type2"].isin(["Forward Foreign Exchange-i","Bank Guarantee-i","Bank Guarantee","Forward Foreign Exchange"])),"BG"]=f_b23["Application Amount (RM)"]
 
   #++++++++++++++++++++++2024+++++++++++++++++++++++++++
@@ -63,10 +69,10 @@ if df:
   banking24.columns = banking24.columns.str.replace("\n", " ").str.replace(" ", " ")
 
   banking24["Page"] = "2024"
-  banking24.loc[banking24["Date Approved"].isin(["-","0"]),"Date Approved"] = ""
-  banking24["Date Approved"] = banking24["Date Approved"].astype(str)
-  banking24["Date Approved"] = banking24["Date Approved"].str.strip()
-  banking24["Date Approved"] = banking24["Date Approved"].str[:10]
+  #banking24.loc[banking24["Date Approved"].isin(["-","0"]),"Date Approved"] = ""
+  #banking24["Date Approved"] = banking24["Date Approved"].astype(str)
+  #banking24["Date Approved"] = banking24["Date Approved"].str.strip()
+  #banking24["Date Approved"] = banking24["Date Approved"].str[:10]
   banking24["Date Approved"] = pd.to_datetime(banking24["Date Approved"], errors='coerce')
 
   #st.write(banking24.head(1))
@@ -87,9 +93,15 @@ if df:
                      "Currency3",
                      "Application Amount  (FX Currency )",
                      "Application Amount  (RM)",
+                     "Amount Approved  (FX Currency )",
+                     "Amount Approved (RM equivalent)",
+                     "Amount Accepted   ( FX Currency )",
+                     "Amount Accepted  (RM Equivalent)",
+                     "Amount  Rejected  (FX Currency)",
+                     "Amount Rejected  (RM Currency )",
                      "Page"]].sort_values("Date Approved",ascending=False)
 
-  f_b24.loc[~(f_b24["Facility Type / Product Type2"].isin(["Forward Foreign Exchange-i","Bank Guarantee-i","Bank Guarantee","Forward Foreign Exchange"])),"LN"]=f_b24["Application Amount  (FX Currency )"]
+  f_b24.loc[~(f_b24["Facility Type / Product Type2"].isin(["Forward Foreign Exchange-i","Bank Guarantee-i","Bank Guarantee","Forward Foreign Exchange"])),"LN"]=f_b24["Application Amount  (RM)"]
   f_b24.loc[(f_b24["Facility Type / Product Type2"].isin(["Forward Foreign Exchange-i","Bank Guarantee-i","Bank Guarantee","Forward Foreign Exchange"])),"BG"]=f_b24["Application Amount  (RM)"]
 
   #++++++++++++++++++++++Process+++++++++++++++++++++++++++
@@ -111,19 +123,52 @@ if df:
                      "Currency3",
                      "Application Amount (FX Currency )",
                      "Application Amount (RM)",
+                     "Amount Approved  (FX Currency )",
+                     "Amount Approved (RM equivalent)",
+                     "Amount Accepted   ( FX Currency )",
+                     "Amount Accepted  (RM Equivalent)",
+                     "Amount  Rejected  (FX Currency)",
+                     "Amount Rejected  (RM Currency )",
                      "Page",
                      "LN",
                      "BG"]].sort_values("Date Approved",ascending=False)
   
   appendR["No."] = range(1, len(appendR)+1)
-  
+
+  appendR = appendR[["No.",
+                     "Page",
+                     "CCRIS Application Date",
+                     "Date Approved",
+                     "Date of Acceptance ",
+                     "Date Withdrawal/ Cancellation",
+                     "Date Rejected",
+                     "Customer Name",
+                     "Corporate Status",
+                     "BNM Main Sector",
+                     "Nature of Account2",
+                     "Type of Financing2",
+                     "Facility Type / Product Type2",
+                     "Currency3",
+                     "Application Amount (FX Currency )",
+                     "Application Amount (RM)",
+                     "Amount Approved  (FX Currency )",
+                     "Amount Approved (RM equivalent)",
+                     "Amount Accepted   ( FX Currency )",
+                     "Amount Accepted  (RM Equivalent)",
+                     "Amount  Rejected  (FX Currency)",
+                     "Amount Rejected  (RM Currency )",
+                     "LN",
+                     "BG"]]
+
+  st.write(appendR)
+
   from io import BytesIO
 
   def to_excel(df):
     output = BytesIO()
     writer = pd.ExcelWriter(output, engine='xlsxwriter')
     df.to_excel(writer, index=False, sheet_name='Sheet1')
-    df.to_excel(writer, index=False, sheet_name='Sheet2')
+    #df.to_excel(writer, index=False, sheet_name='Sheet2')
     #writer.save() 
     writer.close() 
     processed_data = output.getvalue()
@@ -132,7 +177,7 @@ if df:
   excel_data = to_excel(appendR)
   
   st.write("")
-  st.write('Application:')
+  #st.write('Application:')
   st.download_button("Download CSV",
                      data=excel_data,
                      file_name="MR - Banking.xlsx",
