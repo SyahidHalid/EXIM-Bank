@@ -61,8 +61,18 @@ if df:
                      "Amount Rejected  (RM Currency )",
                      "Page"]].sort_values("Date Approved",ascending=False)
 
-  f_b23.loc[~(f_b23["Facility Type / Product Type2"].isin(["Forward Foreign Exchange-i","Bank Guarantee-i","Bank Guarantee","Forward Foreign Exchange"])),"LN"]=f_b23["Application Amount (RM)"]
-  f_b23.loc[(f_b23["Facility Type / Product Type2"].isin(["Forward Foreign Exchange-i","Bank Guarantee-i","Bank Guarantee","Forward Foreign Exchange"])),"BG"]=f_b23["Application Amount (RM)"]
+  f_b23.loc[~(f_b23["Facility Type / Product Type2"].isin(["Forward Foreign Exchange-i","Bank Guarantee-i","Bank Guarantee","Forward Foreign Exchange"])),"LN (Application)"]=f_b23["Application Amount (RM)"]
+  f_b23.loc[(f_b23["Facility Type / Product Type2"].isin(["Forward Foreign Exchange-i","Bank Guarantee-i","Bank Guarantee","Forward Foreign Exchange"])),"BG (Application)"]=f_b23["Application Amount (RM)"]
+
+  f_b23.loc[~(f_b23["Facility Type / Product Type2"].isin(["Forward Foreign Exchange-i","Bank Guarantee-i","Bank Guarantee","Forward Foreign Exchange"])),"LN (Approved)"]=f_b23["Amount Approved (RM equivalent)"]
+  f_b23.loc[(f_b23["Facility Type / Product Type2"].isin(["Forward Foreign Exchange-i","Bank Guarantee-i","Bank Guarantee","Forward Foreign Exchange"])),"BG (Approved)"]=f_b23["Amount Approved (RM equivalent)"]
+
+  f_b23.loc[~(f_b23["Facility Type / Product Type2"].isin(["Forward Foreign Exchange-i","Bank Guarantee-i","Bank Guarantee","Forward Foreign Exchange"])),"LN (Accepted)"]=f_b23["Amount Accepted  (RM Equivalent)"]
+  f_b23.loc[(f_b23["Facility Type / Product Type2"].isin(["Forward Foreign Exchange-i","Bank Guarantee-i","Bank Guarantee","Forward Foreign Exchange"])),"BG (Accepted)"]=f_b23["Amount Accepted  (RM Equivalent)"]
+
+  f_b23.loc[~(f_b23["Facility Type / Product Type2"].isin(["Forward Foreign Exchange-i","Bank Guarantee-i","Bank Guarantee","Forward Foreign Exchange"])),"LN (Rejected)"]=f_b23["Amount Rejected  (RM Currency )"]
+  f_b23.loc[(f_b23["Facility Type / Product Type2"].isin(["Forward Foreign Exchange-i","Bank Guarantee-i","Bank Guarantee","Forward Foreign Exchange"])),"BG (Rejected)"]=f_b23["Amount Rejected  (RM Currency )"]
+
 
   #++++++++++++++++++++++2024+++++++++++++++++++++++++++
   banking24 = pd.read_excel(df, sheet_name='Applications 2024', header=14)
@@ -101,8 +111,17 @@ if df:
                      "Amount Rejected  (RM Currency )",
                      "Page"]].sort_values("Date Approved",ascending=False)
 
-  f_b24.loc[~(f_b24["Facility Type / Product Type2"].isin(["Forward Foreign Exchange-i","Bank Guarantee-i","Bank Guarantee","Forward Foreign Exchange"])),"LN"]=f_b24["Application Amount  (RM)"]
-  f_b24.loc[(f_b24["Facility Type / Product Type2"].isin(["Forward Foreign Exchange-i","Bank Guarantee-i","Bank Guarantee","Forward Foreign Exchange"])),"BG"]=f_b24["Application Amount  (RM)"]
+  f_b24.loc[~(f_b24["Facility Type / Product Type2"].isin(["Forward Foreign Exchange-i","Bank Guarantee-i","Bank Guarantee","Forward Foreign Exchange"])),"LN (Application)"]=f_b24["Application Amount  (RM)"]
+  f_b24.loc[(f_b24["Facility Type / Product Type2"].isin(["Forward Foreign Exchange-i","Bank Guarantee-i","Bank Guarantee","Forward Foreign Exchange"])),"BG (Application)"]=f_b24["Application Amount  (RM)"]
+
+  f_b24.loc[~(f_b24["Facility Type / Product Type2"].isin(["Forward Foreign Exchange-i","Bank Guarantee-i","Bank Guarantee","Forward Foreign Exchange"])),"LN (Approved)"]=f_b24["Amount Approved (RM equivalent)"]
+  f_b24.loc[(f_b24["Facility Type / Product Type2"].isin(["Forward Foreign Exchange-i","Bank Guarantee-i","Bank Guarantee","Forward Foreign Exchange"])),"BG (Approved)"]=f_b24["Amount Approved (RM equivalent)"]
+
+  f_b24.loc[~(f_b24["Facility Type / Product Type2"].isin(["Forward Foreign Exchange-i","Bank Guarantee-i","Bank Guarantee","Forward Foreign Exchange"])),"LN (Accepted)"]=f_b24["Amount Accepted  (RM Equivalent)"]
+  f_b24.loc[(f_b24["Facility Type / Product Type2"].isin(["Forward Foreign Exchange-i","Bank Guarantee-i","Bank Guarantee","Forward Foreign Exchange"])),"BG (Accepted)"]=f_b24["Amount Accepted  (RM Equivalent)"]
+
+  f_b24.loc[~(f_b24["Facility Type / Product Type2"].isin(["Forward Foreign Exchange-i","Bank Guarantee-i","Bank Guarantee","Forward Foreign Exchange"])),"LN (Rejected)"]=f_b24["Amount Rejected  (RM Currency )"]
+  f_b24.loc[(f_b24["Facility Type / Product Type2"].isin(["Forward Foreign Exchange-i","Bank Guarantee-i","Bank Guarantee","Forward Foreign Exchange"])),"BG (Rejected)"]=f_b24["Amount Rejected  (RM Currency )"]
 
   #++++++++++++++++++++++Process+++++++++++++++++++++++++++
   f_b24.columns = f_b23.columns
@@ -130,8 +149,14 @@ if df:
                      "Amount  Rejected  (FX Currency)",
                      "Amount Rejected  (RM Currency )",
                      "Page",
-                     "LN",
-                     "BG"]].sort_values("Date Approved",ascending=False)
+                     "LN (Application)",
+                     "BG (Application)",
+                     "LN (Approved)",
+                     "BG (Approved)",
+                     "LN (Accepted)",
+                     "BG (Accepted)",
+                     "LN (Rejected)",
+                     "BG (Rejected)"]].sort_values("Date Approved",ascending=False)
   
   appendR["No."] = range(1, len(appendR)+1)
 
@@ -157,8 +182,23 @@ if df:
                      "Amount Accepted  (RM Equivalent)",
                      "Amount  Rejected  (FX Currency)",
                      "Amount Rejected  (RM Currency )",
-                     "LN",
-                     "BG"]]
+                     "LN (Application)",
+                     "BG (Application)",
+                     "LN (Approved)",
+                     "BG (Approved)",
+                     "LN (Accepted)",
+                     "BG (Accepted)",
+                     "LN (Rejected)",
+                     "BG (Rejected)"]]
+
+  #appendR.loc[~(appendR["Facility Type / Product Type2"].isin(["Forward Foreign Exchange-i","Bank Guarantee-i","Bank Guarantee","Forward Foreign Exchange"])),"LN (Approved)"]=appendR["Amount Approved (RM equivalent)"]
+  #appendR.loc[(appendR["Facility Type / Product Type2"].isin(["Forward Foreign Exchange-i","Bank Guarantee-i","Bank Guarantee","Forward Foreign Exchange"])),"BG (Approved)"]=appendR["Amount Approved (RM equivalent)"]
+
+  #appendR.loc[~(appendR["Facility Type / Product Type2"].isin(["Forward Foreign Exchange-i","Bank Guarantee-i","Bank Guarantee","Forward Foreign Exchange"])),"LN (Accepted)"]=appendR["Amount Accepted  (RM Equivalent)"]
+  #appendR.loc[(appendR["Facility Type / Product Type2"].isin(["Forward Foreign Exchange-i","Bank Guarantee-i","Bank Guarantee","Forward Foreign Exchange"])),"BG (Accepted)"]=appendR["Amount Accepted  (RM Equivalent)"]
+
+  #appendR.loc[~(appendR["Facility Type / Product Type2"].isin(["Forward Foreign Exchange-i","Bank Guarantee-i","Bank Guarantee","Forward Foreign Exchange"])),"LN (Rejected)"]=appendR["Amount Rejected  (RM Currency )"]
+  #appendR.loc[(appendR["Facility Type / Product Type2"].isin(["Forward Foreign Exchange-i","Bank Guarantee-i","Bank Guarantee","Forward Foreign Exchange"])),"BG (Rejected)"]=appendR["Amount Rejected  (RM Currency )"]
 
   st.write(appendR)
 
