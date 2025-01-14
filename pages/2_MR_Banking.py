@@ -12,7 +12,7 @@ st.set_page_config(
 html_template = """
 <div style="display: flex; align-items: center;">
     <img src="https://www.exim.com.my/wp-content/uploads/2022/07/video-thumbnail-preferred-financier.png" alt="EXIM Logo" style="width: 200px; height: 72px; margin-right: 10px;">
-    <h1>Banking Aprroval & Acceptance</h1>
+    <h1>Banking Approval & Acceptance</h1>
 </div>
 """
 st.markdown(html_template, unsafe_allow_html=True)
