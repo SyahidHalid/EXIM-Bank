@@ -50,8 +50,6 @@ if df_latest_laf and df_latest_cnc and df_latest_laf1 and df_latest_cnc1 and df1
   df_latest_cnc1 = pd.read_excel(df_latest_cnc1, sheet_name='Active', header=6, usecols="B:AQ")
   df_latest_cnc1 = df_latest_cnc1.iloc[np.where(~df_latest_cnc1["Finance (SAP) Number"].isna())]
   #PD.columns = PD.columns.str.strip()
-  
-
 
   df1 = pd.read_excel(df1, sheet_name="Loan Database", header=1)
 
@@ -66,11 +64,25 @@ if df_latest_laf and df_latest_cnc and df_latest_laf1 and df_latest_cnc1 and df1
 
   df_latest_laf["Finance (SAP) Number"] = df_latest_laf["Finance (SAP) Number"].astype(str)
   df_latest_laf1["Finance (SAP) Number"] = df_latest_laf1["Finance (SAP) Number"].astype(str)
+  df_latest_cnc["Finance (SAP) Number"] = df_latest_cnc["Finance (SAP) Number"].astype(str)
+  df_latest_cnc1["Finance (SAP) Number"] = df_latest_cnc1["Finance (SAP) Number"].astype(str)
+
+  #4 Merge
+  df_latest_laf_merge = df_latest_laf.merge(df_latest_cnc[["Finance (SAP) Number","Total.1"]],on="Finance (SAP) Number",how="left", suffixes=("_TOTAL_ECL_BRU","_CNC_BRU")).merge(df_latest_laf1[["Finance (SAP) Number","Total.1"]],on="Finance (SAP) Number",how="left", suffixes=("","_TOTAL_LAF_LAMA")).merge(df_latest_cnc[["Finance (SAP) Number","Total.1"]],on="Finance (SAP) Number",how="left", suffixes=("","_CNC_LAMA")).merge(LDB1.rename(columns={"Finance(SAP) Number":"Finance (SAP) Number"}),on="Finance (SAP) Number",how="left")
+  df_latest_laf_merge.rename(columns={'Total.1':'Total.1_TOTAL_ECL_LAMA'},inplace=True)
+
+  #OM MATERIAL
+  df_latest_laf_merge.loc[(df_latest_laf_merge["Finance (SAP) Number"].isin(["500724","500640","500642"])),"Total.1_CNC_BRU"] = 0
+  df_latest_laf_merge.loc[(df_latest_laf_merge["Finance (SAP) Number"].isin(["500724","500640","500642"])),"Total.1_CNC_LAMA"] = 0
   
-  df_latest_laf_merge = df_latest_laf.merge(df_latest_laf1[["Finance (SAP) Number","Total.1"]],on="Finance (SAP) Number",how="left", suffixes=("_New","_Old")).merge(LDB1.rename(columns={"Finance(SAP) Number":"Finance (SAP) Number"}),on="Finance (SAP) Number",how="left")
+  #st.write(df_latest_laf_merge)
+
+  df_latest_laf_merge["Total.1_LAF_BRU"] = df_latest_laf_merge["Total.1_TOTAL_ECL_BRU"] - df_latest_laf_merge["Total.1_CNC_BRU"]
+  df_latest_laf_merge["Total.1_LAF_LAMA"] = df_latest_laf_merge["Total.1_TOTAL_ECL_LAMA"] - df_latest_laf_merge["Total.1_CNC_LAMA"]
 
   df_latest_laf_merge["Initial"] = df_latest_laf_merge["Borrower name"].str[:15].str.title()
   df_latest_laf_merge = df_latest_laf_merge.merge(LDB1.iloc[np.where(LDB1.Status.isin(["Active","Active-Overdue","Active-Watchlist","Active-Watchlist-Overdue","Impaired"]))][["Initial","Type of Financing"]].drop_duplicates("Initial"),on="Initial",how="left", suffixes=("_Baru","_Lama"))
+  df_latest_laf_merge.loc[~(df_latest_laf_merge["Type of Financing_Baru"].isin(["Islamic","Conventional"])),"Type of Financing_Baru"] = df_latest_laf_merge["Type of Financing_Lama"]
 
   df_latest_laf_filter = df_latest_laf_merge[["Finance (SAP) Number",
                                         "Borrower name",
@@ -78,89 +90,113 @@ if df_latest_laf and df_latest_cnc and df_latest_laf1 and df_latest_cnc1 and df1
                                         "Type of Financing_Baru",
                                         "Currency",
                                         "Watchlist (Yes/No)",
-                                        "Status",
-                                        "Total.1_New",
-                                        "Total.1_Old",
-                                        "Initial",
-                                        "Type of Financing_Lama"]]
+                                        "Total.1_LAF_BRU",
+                                        "Total.1_CNC_BRU",
+                                        "Total.1_TOTAL_ECL_BRU",
+                                        "Total.1_LAF_LAMA",
+                                        "Total.1_CNC_LAMA",
+                                        "Total.1_TOTAL_ECL_LAMA"]]
 
-  df_latest_laf_filter.loc[~(df_latest_laf_filter["Type of Financing_Baru"].isin(["Islamic","Conventional"])),"Type of Financing_Baru"] = df_latest_laf_filter["Type of Financing_Lama"]
 
-  df_latest_laf_filter.loc[(df_latest_laf_filter["Watchlist (Yes/No)"]=="No")&(df_latest_laf_filter["Type of Financing_Baru"]=="Conventional"),"Balance Sheet Stage 1 Conventional"] = df_latest_laf_filter["Total.1_New"]
-  df_latest_laf_filter.loc[(df_latest_laf_filter["Watchlist (Yes/No)"]=="Yes")&(df_latest_laf_filter["Type of Financing_Baru"]=="Conventional"),"Balance Sheet Stage 2 Conventional"] = df_latest_laf_filter["Total.1_New"]
-  df_latest_laf_filter.loc[(df_latest_laf_filter["Watchlist (Yes/No)"]=="No")&(df_latest_laf_filter["Type of Financing_Baru"]=="Islamic"),"Balance Sheet Stage 1 Islamic"] = df_latest_laf_filter["Total.1_New"]
-  df_latest_laf_filter.loc[(df_latest_laf_filter["Watchlist (Yes/No)"]=="Yes")&(df_latest_laf_filter["Type of Financing_Baru"]=="Islamic"),"Balance Sheet Stage 2 Islamic"] = df_latest_laf_filter["Total.1_New"]
+  
+  df_latest_laf_filter.loc[(df_latest_laf_filter["Watchlist (Yes/No)"]=="No")&(df_latest_laf_filter["Type of Financing_Baru"]=="Conventional"),"Balance Sheet Stage 1 Conventional (LAF)"] = df_latest_laf_filter["Total.1_LAF_BRU"]
+  df_latest_laf_filter.loc[(df_latest_laf_filter["Watchlist (Yes/No)"]=="Yes")&(df_latest_laf_filter["Type of Financing_Baru"]=="Conventional"),"Balance Sheet Stage 2 Conventional (LAF)"] = df_latest_laf_filter["Total.1_LAF_BRU"]
+  df_latest_laf_filter.loc[(df_latest_laf_filter["Watchlist (Yes/No)"]=="No")&(df_latest_laf_filter["Type of Financing_Baru"]=="Islamic"),"Balance Sheet Stage 1 Islamic (LAF)"] = df_latest_laf_filter["Total.1_LAF_BRU"]
+  df_latest_laf_filter.loc[(df_latest_laf_filter["Watchlist (Yes/No)"]=="Yes")&(df_latest_laf_filter["Type of Financing_Baru"]=="Islamic"),"Balance Sheet Stage 2 Islamic (LAF)"] = df_latest_laf_filter["Total.1_LAF_BRU"]
 
-  df_latest_laf_filter.loc[(df_latest_laf_filter["Watchlist (Yes/No)"]=="No")&(df_latest_laf_filter["Type of Financing_Baru"]=="Conventional"),"Profit & Loss Stage 1 Conventional"] = df_latest_laf_filter["Total.1_New"] - df_latest_laf_filter["Total.1_Old"]
-  df_latest_laf_filter.loc[(df_latest_laf_filter["Watchlist (Yes/No)"]=="Yes")&(df_latest_laf_filter["Type of Financing_Baru"]=="Conventional"),"Profit & Loss Stage 2 Conventional"] = df_latest_laf_filter["Total.1_New"] - df_latest_laf_filter["Total.1_Old"]
-  df_latest_laf_filter.loc[(df_latest_laf_filter["Watchlist (Yes/No)"]=="No")&(df_latest_laf_filter["Type of Financing_Baru"]=="Islamic"),"Profit & Loss Stage 1 Islamic"] = df_latest_laf_filter["Total.1_New"] - df_latest_laf_filter["Total.1_Old"]
-  df_latest_laf_filter.loc[(df_latest_laf_filter["Watchlist (Yes/No)"]=="Yes")&(df_latest_laf_filter["Type of Financing_Baru"]=="Islamic"),"Profit & Loss Stage 2 Islamic"] = df_latest_laf_filter["Total.1_New"] - df_latest_laf_filter["Total.1_Old"]
+  df_latest_laf_filter.loc[(df_latest_laf_filter["Watchlist (Yes/No)"]=="No")&(df_latest_laf_filter["Type of Financing_Baru"]=="Conventional"),"Profit & Loss Stage 1 Conventional (LAF)"] = df_latest_laf_filter["Total.1_LAF_BRU"] - df_latest_laf_filter["Total.1_LAF_LAMA"]
+  df_latest_laf_filter.loc[(df_latest_laf_filter["Watchlist (Yes/No)"]=="Yes")&(df_latest_laf_filter["Type of Financing_Baru"]=="Conventional"),"Profit & Loss Stage 2 Conventional (LAF)"] = df_latest_laf_filter["Total.1_LAF_BRU"] - df_latest_laf_filter["Total.1_LAF_LAMA"]
+  df_latest_laf_filter.loc[(df_latest_laf_filter["Watchlist (Yes/No)"]=="No")&(df_latest_laf_filter["Type of Financing_Baru"]=="Islamic"),"Profit & Loss Stage 1 Islamic (LAF)"] = df_latest_laf_filter["Total.1_LAF_BRU"] - df_latest_laf_filter["Total.1_LAF_LAMA"]
+  df_latest_laf_filter.loc[(df_latest_laf_filter["Watchlist (Yes/No)"]=="Yes")&(df_latest_laf_filter["Type of Financing_Baru"]=="Islamic"),"Profit & Loss Stage 2 Islamic (LAF)"] = df_latest_laf_filter["Total.1_LAF_BRU"] - df_latest_laf_filter["Total.1_LAF_LAMA"]
+
+  df_latest_laf_filter.loc[(df_latest_laf_filter["Watchlist (Yes/No)"]=="No")&(df_latest_laf_filter["Type of Financing_Baru"]=="Conventional"),"Balance Sheet Stage 1 Conventional (CNC)"] = df_latest_laf_filter["Total.1_CNC_BRU"]
+  df_latest_laf_filter.loc[(df_latest_laf_filter["Watchlist (Yes/No)"]=="Yes")&(df_latest_laf_filter["Type of Financing_Baru"]=="Conventional"),"Balance Sheet Stage 2 Conventional (CNC)"] = df_latest_laf_filter["Total.1_CNC_BRU"]
+  df_latest_laf_filter.loc[(df_latest_laf_filter["Watchlist (Yes/No)"]=="No")&(df_latest_laf_filter["Type of Financing_Baru"]=="Islamic"),"Balance Sheet Stage 1 Islamic (CNC)"] = df_latest_laf_filter["Total.1_CNC_BRU"]
+  df_latest_laf_filter.loc[(df_latest_laf_filter["Watchlist (Yes/No)"]=="Yes")&(df_latest_laf_filter["Type of Financing_Baru"]=="Islamic"),"Balance Sheet Stage 2 Islamic (CNC)"] = df_latest_laf_filter["Total.1_CNC_BRU"]
+
+  df_latest_laf_filter.loc[(df_latest_laf_filter["Watchlist (Yes/No)"]=="No")&(df_latest_laf_filter["Type of Financing_Baru"]=="Conventional"),"Profit & Loss Stage 1 Conventional (CNC)"] = df_latest_laf_filter["Total.1_CNC_BRU"] - df_latest_laf_filter["Total.1_CNC_LAMA"]
+  df_latest_laf_filter.loc[(df_latest_laf_filter["Watchlist (Yes/No)"]=="Yes")&(df_latest_laf_filter["Type of Financing_Baru"]=="Conventional"),"Profit & Loss Stage 2 Conventional (CNC)"] = df_latest_laf_filter["Total.1_CNC_BRU"] - df_latest_laf_filter["Total.1_CNC_LAMA"]
+  df_latest_laf_filter.loc[(df_latest_laf_filter["Watchlist (Yes/No)"]=="No")&(df_latest_laf_filter["Type of Financing_Baru"]=="Islamic"),"Profit & Loss Stage 1 Islamic (CNC)"] = df_latest_laf_filter["Total.1_CNC_BRU"] - df_latest_laf_filter["Total.1_CNC_LAMA"]
+  df_latest_laf_filter.loc[(df_latest_laf_filter["Watchlist (Yes/No)"]=="Yes")&(df_latest_laf_filter["Type of Financing_Baru"]=="Islamic"),"Profit & Loss Stage 2 Islamic (CNC)"] = df_latest_laf_filter["Total.1_CNC_BRU"] - df_latest_laf_filter["Total.1_CNC_LAMA"]
 
   df_latest_laf_filter["Nature of Account"].fillna("Trade", inplace=True)
   
-  df_latest_laf_filter = df_latest_laf_filter[["Finance (SAP) Number",
+  df_latest_laf_filter_LAF = df_latest_laf_filter[["Finance (SAP) Number",
                                         "Borrower name",
                                         "Nature of Account",
                                         "Type of Financing_Baru",
                                         "Currency",
-                                        "Balance Sheet Stage 1 Conventional",
-                                        "Balance Sheet Stage 2 Conventional",
-                                        "Balance Sheet Stage 1 Islamic",
-                                        "Balance Sheet Stage 2 Islamic",
-                                        "Profit & Loss Stage 1 Conventional",
-                                        "Profit & Loss Stage 2 Conventional",
-                                        "Profit & Loss Stage 1 Islamic",
-                                        "Profit & Loss Stage 2 Islamic"]]
-
-
-
-  df_latest_cnc["Finance (SAP) Number"] = df_latest_cnc["Finance (SAP) Number"].astype(str)
-  df_latest_cnc1["Finance (SAP) Number"] = df_latest_cnc1["Finance (SAP) Number"].astype(str)
-
-  df_latest_cnc_merge = df_latest_cnc.merge(df_latest_cnc1[["Finance (SAP) Number","Total.1"]],on="Finance (SAP) Number",how="left", suffixes=("_New","_Old")).merge(LDB1.rename(columns={"Finance(SAP) Number":"Finance (SAP) Number"}),on="Finance (SAP) Number",how="left")
-
-  df_latest_cnc_merge["Initial"] = df_latest_cnc_merge["Borrower name"].str[:15].str.title()
-  df_latest_cnc_merge = df_latest_cnc_merge.merge(LDB1.iloc[np.where(LDB1.Status.isin(["Active","Active-Overdue","Active-Watchlist","Active-Watchlist-Overdue","Impaired"]))][["Initial","Type of Financing"]].drop_duplicates("Initial"),on="Initial",how="left", suffixes=("_Baru","_Lama"))
-
-  df_latest_cnc_filter = df_latest_cnc_merge[["Finance (SAP) Number",
+                                        "Balance Sheet Stage 1 Conventional (LAF)",
+                                        "Balance Sheet Stage 2 Conventional (LAF)",
+                                        "Balance Sheet Stage 1 Islamic (LAF)",
+                                        "Balance Sheet Stage 2 Islamic (LAF)",
+                                        "Profit & Loss Stage 1 Conventional (LAF)",
+                                        "Profit & Loss Stage 2 Conventional (LAF)",
+                                        "Profit & Loss Stage 1 Islamic (LAF)",
+                                        "Profit & Loss Stage 2 Islamic (LAF)",
+                                        "Watchlist (Yes/No)"]]
+  
+  df_latest_laf_filter_CNC = df_latest_laf_filter[["Finance (SAP) Number",
                                         "Borrower name",
                                         "Nature of Account",
                                         "Type of Financing_Baru",
                                         "Currency",
-                                        "Watchlist (Yes/No)",
-                                        "Status",
-                                        "Total.1_New",
-                                        "Total.1_Old",
-                                        "Initial",
-                                        "Type of Financing_Lama"]]
+                                        "Balance Sheet Stage 1 Conventional (CNC)",
+                                        "Balance Sheet Stage 2 Conventional (CNC)",
+                                        "Balance Sheet Stage 1 Islamic (CNC)",
+                                        "Balance Sheet Stage 2 Islamic (CNC)",
+                                        "Profit & Loss Stage 1 Conventional (CNC)",
+                                        "Profit & Loss Stage 2 Conventional (CNC)",
+                                        "Profit & Loss Stage 1 Islamic (CNC)",
+                                        "Profit & Loss Stage 2 Islamic (CNC)",
+                                        "Watchlist (Yes/No)"]]
 
-  df_latest_cnc_filter.loc[~(df_latest_cnc_filter["Type of Financing_Baru"].isin(["Islamic","Conventional"])),"Type of Financing_Baru"] = df_latest_cnc_filter["Type of Financing_Lama"]
 
-  df_latest_cnc_filter.loc[(df_latest_cnc_filter["Watchlist (Yes/No)"]=="No")&(df_latest_cnc_filter["Type of Financing_Baru"]=="Conventional"),"Balance Sheet Stage 1 Conventional"] = df_latest_cnc_filter["Total.1_New"]
-  df_latest_cnc_filter.loc[(df_latest_cnc_filter["Watchlist (Yes/No)"]=="Yes")&(df_latest_cnc_filter["Type of Financing_Baru"]=="Conventional"),"Balance Sheet Stage 2 Conventional"] = df_latest_cnc_filter["Total.1_New"]
-  df_latest_cnc_filter.loc[(df_latest_cnc_filter["Watchlist (Yes/No)"]=="No")&(df_latest_cnc_filter["Type of Financing_Baru"]=="Islamic"),"Balance Sheet Stage 1 Islamic"] = df_latest_cnc_filter["Total.1_New"]
-  df_latest_cnc_filter.loc[(df_latest_cnc_filter["Watchlist (Yes/No)"]=="Yes")&(df_latest_cnc_filter["Type of Financing_Baru"]=="Islamic"),"Balance Sheet Stage 2 Islamic"] = df_latest_cnc_filter["Total.1_New"]
 
-  df_latest_cnc_filter.loc[(df_latest_cnc_filter["Watchlist (Yes/No)"]=="No")&(df_latest_cnc_filter["Type of Financing_Baru"]=="Conventional"),"Profit & Loss Stage 1 Conventional"] = df_latest_cnc_filter["Total.1_New"] - df_latest_cnc_filter["Total.1_Old"]
-  df_latest_cnc_filter.loc[(df_latest_cnc_filter["Watchlist (Yes/No)"]=="Yes")&(df_latest_cnc_filter["Type of Financing_Baru"]=="Conventional"),"Profit & Loss Stage 2 Conventional"] = df_latest_cnc_filter["Total.1_New"] - df_latest_cnc_filter["Total.1_Old"]
-  df_latest_cnc_filter.loc[(df_latest_cnc_filter["Watchlist (Yes/No)"]=="No")&(df_latest_cnc_filter["Type of Financing_Baru"]=="Islamic"),"Profit & Loss Stage 1 Islamic"] = df_latest_cnc_filter["Total.1_New"] - df_latest_cnc_filter["Total.1_Old"]
-  df_latest_cnc_filter.loc[(df_latest_cnc_filter["Watchlist (Yes/No)"]=="Yes")&(df_latest_cnc_filter["Type of Financing_Baru"]=="Islamic"),"Profit & Loss Stage 2 Islamic"] = df_latest_cnc_filter["Total.1_New"] - df_latest_cnc_filter["Total.1_Old"]
+  #df_latest_cnc_merge = df_latest_cnc.merge(df_latest_cnc1[["Finance (SAP) Number","Total.1"]],on="Finance (SAP) Number",how="left", suffixes=("_New","_Old")).merge(LDB1.rename(columns={"Finance(SAP) Number":"Finance (SAP) Number"}),on="Finance (SAP) Number",how="left")
 
-  df_latest_cnc_filter["Nature of Account"].fillna("Trade", inplace=True)
+  #df_latest_cnc_merge["Initial"] = df_latest_cnc_merge["Borrower name"].str[:15].str.title()
+  #df_latest_cnc_merge = df_latest_cnc_merge.merge(LDB1.iloc[np.where(LDB1.Status.isin(["Active","Active-Overdue","Active-Watchlist","Active-Watchlist-Overdue","Impaired"]))][["Initial","Type of Financing"]].drop_duplicates("Initial"),on="Initial",how="left", suffixes=("_Baru","_Lama"))
 
-  df_latest_cnc_filter = df_latest_cnc_filter[["Finance (SAP) Number",
-                                        "Borrower name",
-                                        "Nature of Account",
-                                        "Type of Financing_Baru",
-                                        "Currency",
-                                        "Balance Sheet Stage 1 Conventional",
-                                        "Balance Sheet Stage 2 Conventional",
-                                        "Balance Sheet Stage 1 Islamic",
-                                        "Balance Sheet Stage 2 Islamic",
-                                        "Profit & Loss Stage 1 Conventional",
-                                        "Profit & Loss Stage 2 Conventional",
-                                        "Profit & Loss Stage 1 Islamic",
-                                        "Profit & Loss Stage 2 Islamic"]]
+  #df_latest_cnc_filter = df_latest_cnc_merge[["Finance (SAP) Number",
+  #                                      "Borrower name",
+  #                                      "Nature of Account",
+  #                                      "Type of Financing_Baru",
+  #                                      "Currency",
+  #                                      "Watchlist (Yes/No)",
+  #                                      "Status",
+  #                                      "Total.1_New",
+  #                                      "Total.1_Old",
+  #                                      "Initial",
+  #                                      "Type of Financing_Lama"]]
+
+  #df_latest_cnc_filter.loc[~(df_latest_cnc_filter["Type of Financing_Baru"].isin(["Islamic","Conventional"])),"Type of Financing_Baru"] = df_latest_cnc_filter["Type of Financing_Lama"]
+
+  #df_latest_cnc_filter.loc[(df_latest_cnc_filter["Watchlist (Yes/No)"]=="No")&(df_latest_cnc_filter["Type of Financing_Baru"]=="Conventional"),"Balance Sheet Stage 1 Conventional"] = df_latest_cnc_filter["Total.1_New"]
+  #df_latest_cnc_filter.loc[(df_latest_cnc_filter["Watchlist (Yes/No)"]=="Yes")&(df_latest_cnc_filter["Type of Financing_Baru"]=="Conventional"),"Balance Sheet Stage 2 Conventional"] = df_latest_cnc_filter["Total.1_New"]
+  #df_latest_cnc_filter.loc[(df_latest_cnc_filter["Watchlist (Yes/No)"]=="No")&(df_latest_cnc_filter["Type of Financing_Baru"]=="Islamic"),"Balance Sheet Stage 1 Islamic"] = df_latest_cnc_filter["Total.1_New"]
+  #df_latest_cnc_filter.loc[(df_latest_cnc_filter["Watchlist (Yes/No)"]=="Yes")&(df_latest_cnc_filter["Type of Financing_Baru"]=="Islamic"),"Balance Sheet Stage 2 Islamic"] = df_latest_cnc_filter["Total.1_New"]
+
+  #df_latest_cnc_filter.loc[(df_latest_cnc_filter["Watchlist (Yes/No)"]=="No")&(df_latest_cnc_filter["Type of Financing_Baru"]=="Conventional"),"Profit & Loss Stage 1 Conventional"] = df_latest_cnc_filter["Total.1_New"] - df_latest_cnc_filter["Total.1_Old"]
+  #df_latest_cnc_filter.loc[(df_latest_cnc_filter["Watchlist (Yes/No)"]=="Yes")&(df_latest_cnc_filter["Type of Financing_Baru"]=="Conventional"),"Profit & Loss Stage 2 Conventional"] = df_latest_cnc_filter["Total.1_New"] - df_latest_cnc_filter["Total.1_Old"]
+  #df_latest_cnc_filter.loc[(df_latest_cnc_filter["Watchlist (Yes/No)"]=="No")&(df_latest_cnc_filter["Type of Financing_Baru"]=="Islamic"),"Profit & Loss Stage 1 Islamic"] = df_latest_cnc_filter["Total.1_New"] - df_latest_cnc_filter["Total.1_Old"]
+  #df_latest_cnc_filter.loc[(df_latest_cnc_filter["Watchlist (Yes/No)"]=="Yes")&(df_latest_cnc_filter["Type of Financing_Baru"]=="Islamic"),"Profit & Loss Stage 2 Islamic"] = df_latest_cnc_filter["Total.1_New"] - df_latest_cnc_filter["Total.1_Old"]
+
+  #df_latest_cnc_filter["Nature of Account"].fillna("Trade", inplace=True)
+
+  #df_latest_cnc_filter = df_latest_cnc_filter[["Finance (SAP) Number",
+  #                                      "Borrower name",
+  #                                      "Nature of Account",
+  #                                      "Type of Financing_Baru",
+  #                                      "Currency",
+  #                                      "Balance Sheet Stage 1 Conventional",
+  #                                      "Balance Sheet Stage 2 Conventional",
+  #                                      "Balance Sheet Stage 1 Islamic",
+  #                                      "Balance Sheet Stage 2 Islamic",
+  #                                      "Profit & Loss Stage 1 Conventional",
+  #                                      "Profit & Loss Stage 2 Conventional",
+  #                                      "Profit & Loss Stage 1 Islamic",
+  #                                      "Profit & Loss Stage 2 Islamic"]]
 
 
 
@@ -168,15 +204,16 @@ if df_latest_laf and df_latest_cnc and df_latest_laf1 and df_latest_cnc1 and df1
   #df_latest_cnc_filter["Borrower name"] = df_latest_cnc_filter["Borrower name"].str.title()
   #df_latest_cnc_filter['matched_value'] = df_latest_cnc_filter['Borrower name'].apply(lambda x: LDB1['Customer Name'][LDB1['Customer Name'].apply(lambda y: y in x)].values[0] if LDB1['Customer Name'].apply(lambda y: y in x).any() else None)
 
-  st.write(df_latest_cnc_filter)
-  #st.write(df_latest_cnc_filter["matched_value"].value_counts())
-  st.write(df_latest_cnc_filter.shape)
-  st.write(df_latest_cnc.shape)
+  st.write(df_latest_laf_filter)
+  st.write(df_latest_laf_filter.shape)
+  st.write(df_latest_laf.shape)
+  st.write("SAP Duplication Validation:")
+  st.write(df_latest_laf_filter["Finance (SAP) Number"].value_counts())
   
   #st.write(df_latest_cnc_filter.shape)
   #st.write(df_latest_cnc.shape)
 
-  #sambung cari amount laf sbb x exclude C&C as well exclude 3 account OM Material
+
 
   from io import BytesIO
 
@@ -184,8 +221,9 @@ if df_latest_laf and df_latest_cnc and df_latest_laf1 and df_latest_cnc1 and df1
     output = BytesIO()
     writer = pd.ExcelWriter(output, engine='xlsxwriter')
 
-    df_latest_laf_filter.to_excel(writer, index=False, sheet_name='LAF (2)', header=2)
-    df_latest_cnc_filter.to_excel(writer, index=False, sheet_name='C&C (2)', header=2)
+    df_latest_laf_filter.to_excel(writer, index=False, sheet_name='Source', header=2)
+    df_latest_laf_filter_LAF.to_excel(writer, index=False, sheet_name='LAF (2)', header=2)
+    df_latest_laf_filter_CNC.to_excel(writer, index=False, sheet_name='C&C (2)', header=2)
     
     #writer.save() 
     writer.close() 
