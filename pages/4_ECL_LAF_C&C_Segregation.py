@@ -68,7 +68,7 @@ if df_latest_laf and df_latest_cnc and df_latest_laf1 and df_latest_cnc1 and df1
   df_latest_cnc1["Finance (SAP) Number"] = df_latest_cnc1["Finance (SAP) Number"].astype(str)
 
   #4 Merge
-  df_latest_laf_merge = df_latest_laf.merge(df_latest_cnc[["Finance (SAP) Number","Total.1"]],on="Finance (SAP) Number",how="left", suffixes=("_TOTAL_ECL_BRU","_CNC_BRU")).merge(df_latest_laf1[["Finance (SAP) Number","Total.1"]],on="Finance (SAP) Number",how="left", suffixes=("","_TOTAL_LAF_LAMA")).merge(df_latest_cnc[["Finance (SAP) Number","Total.1"]],on="Finance (SAP) Number",how="left", suffixes=("","_CNC_LAMA")).merge(LDB1.rename(columns={"Finance(SAP) Number":"Finance (SAP) Number"}),on="Finance (SAP) Number",how="left")
+  df_latest_laf_merge = df_latest_laf.merge(df_latest_cnc[["Finance (SAP) Number","Total.1"]],on="Finance (SAP) Number",how="left", suffixes=("_TOTAL_ECL_BRU","_CNC_BRU")).merge(df_latest_laf1[["Finance (SAP) Number","Total.1"]],on="Finance (SAP) Number",how="left", suffixes=("","_TOTAL_LAF_LAMA")).merge(df_latest_cnc1[["Finance (SAP) Number","Total.1"]],on="Finance (SAP) Number",how="left", suffixes=("","_CNC_LAMA")).merge(LDB1.rename(columns={"Finance(SAP) Number":"Finance (SAP) Number"}),on="Finance (SAP) Number",how="left")
   df_latest_laf_merge.rename(columns={'Total.1':'Total.1_TOTAL_ECL_LAMA'},inplace=True)
 
   #OM MATERIAL
@@ -84,7 +84,9 @@ if df_latest_laf and df_latest_cnc and df_latest_laf1 and df_latest_cnc1 and df1
   df_latest_laf_merge = df_latest_laf_merge.merge(LDB1.iloc[np.where(LDB1.Status.isin(["Active","Active-Overdue","Active-Watchlist","Active-Watchlist-Overdue","Impaired"]))][["Initial","Type of Financing"]].drop_duplicates("Initial"),on="Initial",how="left", suffixes=("_Baru","_Lama"))
   df_latest_laf_merge.loc[~(df_latest_laf_merge["Type of Financing_Baru"].isin(["Islamic","Conventional"])),"Type of Financing_Baru"] = df_latest_laf_merge["Type of Financing_Lama"]
 
-  df_latest_laf_filter = df_latest_laf_merge[["Finance (SAP) Number",
+  df_latest_laf_merge["Nature of Account"].fillna("Trade", inplace=True)
+  
+  df_latest_laf_filter = df_latest_laf_merge.fillna(0)[["Finance (SAP) Number",
                                         "Borrower name",
                                         "Nature of Account",
                                         "Type of Financing_Baru",
@@ -97,6 +99,7 @@ if df_latest_laf and df_latest_cnc and df_latest_laf1 and df_latest_cnc1 and df1
                                         "Total.1_CNC_LAMA",
                                         "Total.1_TOTAL_ECL_LAMA"]]
 
+  #st.write(df_latest_laf_filter)
 
   
   df_latest_laf_filter.loc[(df_latest_laf_filter["Watchlist (Yes/No)"]=="No")&(df_latest_laf_filter["Type of Financing_Baru"]=="Conventional"),"Balance Sheet Stage 1 Conventional (LAF)"] = df_latest_laf_filter["Total.1_LAF_BRU"]
@@ -119,9 +122,7 @@ if df_latest_laf and df_latest_cnc and df_latest_laf1 and df_latest_cnc1 and df1
   df_latest_laf_filter.loc[(df_latest_laf_filter["Watchlist (Yes/No)"]=="No")&(df_latest_laf_filter["Type of Financing_Baru"]=="Islamic"),"Profit & Loss Stage 1 Islamic (CNC)"] = df_latest_laf_filter["Total.1_CNC_BRU"] - df_latest_laf_filter["Total.1_CNC_LAMA"]
   df_latest_laf_filter.loc[(df_latest_laf_filter["Watchlist (Yes/No)"]=="Yes")&(df_latest_laf_filter["Type of Financing_Baru"]=="Islamic"),"Profit & Loss Stage 2 Islamic (CNC)"] = df_latest_laf_filter["Total.1_CNC_BRU"] - df_latest_laf_filter["Total.1_CNC_LAMA"]
 
-  df_latest_laf_filter["Nature of Account"].fillna("Trade", inplace=True)
-  
-  df_latest_laf_filter_LAF = df_latest_laf_filter[["Finance (SAP) Number",
+  df_latest_laf_filter_LAF = df_latest_laf_filter.fillna(0)[["Finance (SAP) Number",
                                         "Borrower name",
                                         "Nature of Account",
                                         "Type of Financing_Baru",
@@ -136,7 +137,7 @@ if df_latest_laf and df_latest_cnc and df_latest_laf1 and df_latest_cnc1 and df1
                                         "Profit & Loss Stage 2 Islamic (LAF)",
                                         "Watchlist (Yes/No)"]]
   
-  df_latest_laf_filter_CNC = df_latest_laf_filter[["Finance (SAP) Number",
+  df_latest_laf_filter_CNC = df_latest_laf_filter.fillna(0)[["Finance (SAP) Number",
                                         "Borrower name",
                                         "Nature of Account",
                                         "Type of Financing_Baru",
