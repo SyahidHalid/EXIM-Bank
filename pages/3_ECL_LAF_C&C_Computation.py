@@ -1,14 +1,19 @@
+# Library
 import pandas as pd
 import numpy as np
 import streamlit as st
 import datetime as dt
 
+
+# page icon
 st.set_page_config(
   page_title = 'ECL - Automation',
   page_icon = "EXIM.png",
   layout="wide"
   )
 
+
+# header
 html_template = """
 <div style="display: flex; align-items: center;">
     <img src="https://www.exim.com.my/wp-content/uploads/2022/07/video-thumbnail-preferred-financier.png" alt="EXIM Logo" style="width: 200px; height: 72px; margin-right: 10px;">
@@ -18,20 +23,23 @@ html_template = """
 st.markdown(html_template, unsafe_allow_html=True)
 st.subheader("Start:")
 #st.header('asd')
-
-#st.write('# Income Statement')
 st.write('Please **fill** in the form below to auto run **ECL** **Computation** by uploading **ECL** **report** received in xlsx format below:')
 st.write('**Computation Failed**')
+
 
 #year = st.slider("Year", min_value=2020, max_value=2030, step=1)
 #month = st.slider("Month", min_value=1, max_value=12, step=1)
 
+
+# insert reporting date
 date = st.date_input("Date", value=dt.date.today())
 
+
+# upload file
 df = st.file_uploader(label= "Upload **ECL** **Computation**:")
 
 if df:
-  #++++++++++++++++++++++2023+++++++++++++++++++++++++++
+  # upload file
   PD = pd.read_excel(df, sheet_name='Lifetime PD', header=55, usecols="B:FZ") #
   #PD.columns = PD.columns.str.replace("\n", " ")#.str.replace(" ", " ")
   #PD.columns = PD.columns.str.strip()
@@ -46,17 +54,18 @@ if df:
   #st.dataframe(Active)
   #st.write(PD)
 
+  # working file
   Active=Active.iloc[np.where(~(Active["Finance (SAP) Number"].isna()))]
   Active['Reporting date'] = date
   
-  #Date
+  # Date Format
   Active["First Released Date"] = pd.to_datetime(Active["First Released Date"], errors='coerce')
   Active["Maturity date"] = pd.to_datetime(Active["Maturity date"], errors='coerce')
   Active["Availability period"] = pd.to_datetime(Active["Availability period"], errors='coerce')
   Active["Reporting date"] = pd.to_datetime(Active["Reporting date"], errors='coerce')
 
 
-  #YOB
+  # YOB
   Active["YOB"] = ((Active["Maturity date"].dt.year - Active["Reporting date"].dt.year)*12+(Active["Maturity date"].dt.month - Active["Reporting date"].dt.month))#+1
   
   def extend_row(row):
@@ -108,12 +117,12 @@ if df:
   
   extended_Active.loc[(extended_Active["Sequence"]!=0)&~(extended_Active["Interest payment frequency"].isin(["Bullet","Quarterly","Semi Annually","Annually"])),"Cal_Interest_payment"] = extended_Active["Interest payment (base currency)"]
 
-
+ 
   #Installment & its C&C
   extended_Active["Instalment Amount"] = extended_Active["Cal_Principal_payment"]+extended_Active["Cal_Interest_payment"]
-  
   extended_Active["Instalment Amount (C&C)"] = extended_Active["Cal_Principal_payment"]+extended_Active["Cal_Interest_payment"]
-  extended_Active.loc[extended_Active["Sequence"]==1,"Instalment Amount (C&C)"] = 0
+  extended_Active.loc[extended_Active["Instalment Amount (C&C)"]>extended_Active["Instalment Amount (C&C)"].shift(1),"Instalment Amount (C&C)"] = extended_Active["Instalment Amount (C&C)"].shift(1)
+  #extended_Active.loc[extended_Active["Sequence"]==1,"Instalment Amount (C&C)"] = 0
 
 
   #Undrawn & its C&C
@@ -155,9 +164,12 @@ if df:
   extended_Active["OS + Undisbursed + CCF"] = extended_Active["Total outstanding (base currency)"] + ((extended_Active["Undrawn_balance"] - extended_Active["Instalment Amount"])*extended_Active["Sequence"])
   extended_Active["OS + Undisbursed + CCF (C&C)"] = extended_Active["Instalment Amount (C&C)"] + ((extended_Active["Undrawn_balance"] - extended_Active["Instalment Amount (C&C)"])*extended_Active["Sequence"])
 
+
   extended_Active.loc[extended_Active["Sequence"]==extended_Active["YOB"],"OS + Undisbursed + CCF"]= 0
   extended_Active.loc[extended_Active["Sequence"]==extended_Active["YOB"],"OS + Undisbursed + CCF (C&C)"]= 0
   
+  
+
   #==========================Special Case
 
   PD.PD = PD.PD.str.upper()
@@ -169,19 +181,100 @@ if df:
 
   extended_Active_PD = extended_Active.merge(Pivoted_PD.rename(columns={"PD":"PD segment","Year":"Sequence"}),on=["PD segment","Sequence"],how="left") #,indicator=True
 
-  #To be Review
-  extended_Active_PD["EIR adj"] =1/((1+extended_Active_PD["Profit Rate/ EIR"])**((30.327*extended_Active_PD["Sequence"])/365)) #30.5 number of day in a month
+  import string
+  extended_Active_PD['Number'] = range(1, len(extended_Active_PD) + 1)
+  extended_Active_PD['Key'] = [string.ascii_uppercase[i % len(string.ascii_uppercase)] for i in range(len(extended_Active_PD))]
+
+  # st.write(extended_Active_PD)
+  # st.write(extended_Active_PD.shape)
+  # st.write("")
+  # st.download_button("Download CSV",
+  #                  extended_Active_PD.to_csv(index=False),
+  #                  file_name='extended_Active_PD.csv',
+  #                  mime='text/csv')
+
+  # EIR
+  Active_EIR = Active
+  Active_EIR['month_ends'] = Active_EIR.apply(lambda row: pd.date_range(start=row['Reporting date'], 
+                                                      end=row['Maturity date'], 
+                                                      freq='M'), axis=1)
   
-  extended_Active_PD["Stage 1 ECL (Overall)"] = extended_Active_PD["OS + Undisbursed + CCF"]*extended_Active_PD["PD%"]*extended_Active_PD["LGD rate"]*extended_Active_PD["EIR adj"]
+  # Function to adjust month_ends and include the actual end date if it's not a month-end
+  def adjust_month_ends(row):
+      month_ends = row['month_ends']
+      end_date = pd.to_datetime(row['Maturity date'])
+      
+      # Check if the end date is a month-end, if not, append it
+      if end_date.is_month_end:
+          return list(month_ends)
+      else:
+          return list(month_ends.union([end_date]))
+
+  # Apply the adjustment to each row and convert to a list of Timestamps
+  Active_EIR['adjusted_month_ends'] = Active_EIR.apply(adjust_month_ends, axis=1)
+
+  # Convert month_ends column to lists of Timestamps to avoid Arrow errors
+  Active_EIR['month_ends'] = Active_EIR['month_ends'].apply(list)
+
+  Active_EIR = Active_EIR.explode('adjusted_month_ends')
+  Active_EIR = Active_EIR.reset_index(drop=True)
+  Active_EIR['month_ends_shift'] =  Active_EIR['adjusted_month_ends'].shift(1)
+  Active_EIR["Sequence 1"] = (Active_EIR['adjusted_month_ends'] - Active_EIR['month_ends_shift']).dt.days
+  Active_EIR.loc[Active_EIR['month_ends_shift'].isna(),"Sequence 1"] = 0
+  Active_EIR.loc[Active_EIR['Sequence 1']<0,"Sequence 1"] = 0
+
+  Active_EIR = Active_EIR[["Finance (SAP) Number","YOB","adjusted_month_ends","month_ends_shift","Sequence 1"]]
+
+  import string
+  Active_EIR['Number'] = range(1, len(Active_EIR) + 1)
+  Active_EIR['Key'] = [string.ascii_uppercase[i % len(string.ascii_uppercase)] for i in range(len(Active_EIR))]
+
+
+  extended_Active_PD_1 = extended_Active_PD.merge(Active_EIR,on=['Finance (SAP) Number','YOB','Number','Key'],how="left")
+
+  extended_Active_PD_1.rename(columns={"Sequence 1":"NOD"},inplace=True)
+
+  extended_Active_PD_1['Prev_Cumulative'] = extended_Active_PD_1.groupby('Finance (SAP) Number')['NOD'].cumsum()
+
+  #extended_Active_PD_1.loc[extended_Active_PD_1["Finance (SAP) Number"]==extended_Active_PD_1["Finance (SAP) Number"].shift(1),"Prev_Cumulative"] = extended_Active_PD_1['NOD'] + extended_Active_PD_1['NOD'].shift(1)
+  #extended_Active_PD_1.loc[extended_Active_PD_1["Finance (SAP) Number"]!=extended_Active_PD_1["Finance (SAP) Number"].shift(1),"Prev_Cumulative"] = 0
   
-  extended_Active_PD["Stage 1 ECL (C&C)"] = extended_Active_PD["OS + Undisbursed + CCF (C&C)"]*extended_Active_PD["PD%"]*extended_Active_PD["LGD rate"]*extended_Active_PD["EIR adj"]
+  extended_Active_PD_1['Prev_Cumulative'].fillna(0, inplace=True)
+
+  #st.write(extended_Active_PD_1)
+
+  #Active.loc[~Active['month_ends_shift'].isna(),"NOD"] = (Active['month_ends'] - Active['month_ends_shift'])
+  #Active['NOD'].fillna(0,inplace=True)
+  #Active['NOD'] = pd.to_datetime(Active['NOD'], errors='coerce')
+  #Active["NOD 1"] = Active['NOD'].dt.strftime('%Y%m%d').astype(int)
+
+  # st.write(Active_EIR)
+  # st.write(Active_EIR.shape)
+  # st.write("")
+  # st.download_button("Download CSV",
+  #                  Active_EIR.to_csv(index=False),
+  #                  file_name='Active_EIR.csv',
+  #                  mime='text/csv')
   
-  extended_Active_FL_PD = extended_Active_PD.merge(Pivoted_FL_PD.rename(columns={"PD":"PD segment","Year":"Sequence"}),on=["PD segment","Sequence"],how="left") #,indicator=True
+  #To be Review #20250303 done review
+  extended_Active_PD_1["EIR adj"] =1/((1+extended_Active_PD_1["Profit Rate/ EIR"])**((extended_Active_PD_1["Prev_Cumulative"])/365)) #30.5 number of day in a month
+  
+  extended_Active_PD_1["Stage 1 ECL (Overall)"] = extended_Active_PD_1["OS + Undisbursed + CCF"]*extended_Active_PD_1["PD%"]*extended_Active_PD_1["LGD rate"]*extended_Active_PD_1["EIR adj"]
+  
+  extended_Active_PD_1["Stage 1 ECL (C&C)"] = extended_Active_PD_1["OS + Undisbursed + CCF (C&C)"]*extended_Active_PD_1["PD%"]*extended_Active_PD_1["LGD rate"]*extended_Active_PD_1["EIR adj"]
+  
+  extended_Active_FL_PD = extended_Active_PD_1.merge(Pivoted_FL_PD.rename(columns={"PD":"PD segment","Year":"Sequence"}),on=["PD segment","Sequence"],how="left") #,indicator=True
 
   extended_Active_FL_PD["Stage 2 ECL (Overall)"] = extended_Active_FL_PD["OS + Undisbursed + CCF"]*extended_Active_FL_PD["FL PD%"]*extended_Active_FL_PD["LGD rate"]*extended_Active_FL_PD["EIR adj"]
   
   extended_Active_FL_PD["Stage 2 ECL (C&C)"] = extended_Active_FL_PD["OS + Undisbursed + CCF (C&C)"]*extended_Active_FL_PD["FL PD%"]*extended_Active_FL_PD["LGD rate"]*extended_Active_FL_PD["EIR adj"]
   
+  # grouped = extended_Active_FL_PD.groupby(["Finance (SAP) Number","Borrower name"])[["Stage 1 ECL (Overall)",
+  #                                                                           "Stage 2 ECL (Overall)",
+  #                                                                           "Stage 1 ECL (C&C)",
+  #                                                                           "Stage 2 ECL (C&C)"]].sum().reset_index()
+  
+  # rule for active & watchlist
   ECL_Filter = extended_Active_FL_PD.iloc[np.where((extended_Active_FL_PD["Watchlist (Yes/No)"]=="No")&((extended_Active_FL_PD["Sequence"]<=12))|(extended_Active_FL_PD["Watchlist (Yes/No)"]=="Yes"))]
   #.fillna(0)
 
@@ -196,7 +289,18 @@ if df:
   #,"Year":""
   #st.write(extended_Active_PD._merge.value_counts())
   #st.write(extended_Active_PD.iloc[np.where(extended_Active_PD._merge=="left_only")])
+  
+  # st.write(extended_Active_FL_PD)
+  #st.write(extended_Active_FL_PD.shape)
+
+  #st.write(grouped)
+  #st.write(grouped.shape)
+
   st.write(ECL_Filter)
+  st.write(ECL_Filter.shape)
+
+  st.write(ECL_Group)
+  st.write(ECL_Group.shape)
   #st.write(PD)
   #extended_df = extended_df.drop(columns=['YOB'])
 
@@ -209,8 +313,10 @@ if df:
     output = BytesIO()
     writer = pd.ExcelWriter(output, engine='xlsxwriter')
 
-    ECL_Group.to_excel(writer, index=False, sheet_name='Group')
-    ECL_Filter.to_excel(writer, index=False, sheet_name='Ori')
+    #extended_Active_FL_PD.to_excel(writer, index=False, sheet_name='extended_Active_FL_PD')
+    #grouped.to_excel(writer, index=False, sheet_name='grouped')
+    ECL_Filter.to_excel(writer, index=False, sheet_name='ECL_Filter')
+    ECL_Group.to_excel(writer, index=False, sheet_name='ECL_Group')
     
     #writer.save() 
     writer.close() 
