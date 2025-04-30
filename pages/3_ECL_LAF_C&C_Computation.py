@@ -343,7 +343,12 @@ if df:
   Active_EIR.loc[Active_EIR['month_ends_shift'].isna(),"Sequence 1"] = 0
   Active_EIR.loc[Active_EIR['Sequence 1']<0,"Sequence 1"] = 0
 
-  Active_EIR = Active_EIR[["Finance (SAP) Number","YOB","adjusted_month_ends","month_ends_shift","Sequence 1"]]
+  Active_EIR.loc[Active_EIR['Sequence 1']==0,"month_ends_shift"] = Active_EIR['Reporting date']
+  Active_EIR["Sequence 2"] = (Active_EIR['adjusted_month_ends'] - Active_EIR['month_ends_shift']).dt.days
+  
+  Active_EIR = Active_EIR[["Finance (SAP) Number","YOB","adjusted_month_ends","month_ends_shift","Sequence 2"]]
+
+  #st.write(Active_EIR)
 
   import string
   Active_EIR['Number'] = range(1, len(Active_EIR) + 1)
@@ -351,7 +356,7 @@ if df:
 
   extended_Active_PD_1 = extended_Active_PD.merge(Active_EIR,on=['Finance (SAP) Number','YOB','Number','Key'],how="left")
 
-  extended_Active_PD_1.rename(columns={"Sequence 1":"NOD"},inplace=True)
+  extended_Active_PD_1.rename(columns={"Sequence 2":"NOD"},inplace=True)
 
   extended_Active_PD_1['Prev_Cumulative'] = extended_Active_PD_1.groupby('Finance (SAP) Number')['NOD'].cumsum()
   
