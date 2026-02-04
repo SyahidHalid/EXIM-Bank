@@ -1,3 +1,8 @@
+# python -m streamlit run MA_Income_Statement.py
+# klau guna virtual environment 
+# .\venv\Scripts\activate
+
+
 import streamlit as st
 import pandas as pd
 import numpy as np
